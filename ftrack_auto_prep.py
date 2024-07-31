@@ -15,6 +15,13 @@ def main():
         print(f"{directory} exists")
     else:
         print(f"{directory} does not exist")
+        sys.exit(1)
+
+    # Scans a directory and prints the names of its files
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if entry.is_file():
+                print(entry.name)
 
     # Information about the session
     session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
