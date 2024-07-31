@@ -17,17 +17,43 @@ def list_files_recursively(directory_path, indent_level=0):
             elif entry.is_file():
                 print(entry.name)
 
+# Queries a project Name and ID then prints the project name and ID
 def get_target_project(project_name):
     # Find the first instance of project named {target_project_name}
     project = session.query(f"Project where name is {project_name}").first()
 
-    # Print name and ID if project exists else print error 
-    if project:
-        print(f"Project Name: {project['name']} | ID: {project['id']}")
-    else:
-        print(f"No project with the name '{project_name}' could be found")
+    # If project doesn't exist run the create_project function, call query again and close the session
+    if not project:
+        create_project(project_name)
+        project = session.query(f"Project where name is {project_name}").first()
+        session.close()
+    
+    print(f"Project Name: {project['name']} | ID: {project['id']}")
 
-    session.close()
+# Creates a new ftrack project if user chooses y, else closes the script
+def create_project(project_name):
+    print(f"Project not found: {project_name}\n")
+
+    user_choice = ""
+
+    while user_choice not in ("y", "n"):
+        print("Would you like to create a new project? y/n")
+        user_choice = input()
+
+    match user_choice:
+        case "y":
+            project_code = input("Please enter a project code (eg. PROJ-001): ")
+
+            session.create("Project", {
+                "name": project_name,
+                "full_name": project_name,
+                'project_code': project_code,
+            })
+
+            session.commit()
+        case "n":
+            session.close()
+            sys.exit()
 
 def main():
     # Print message and exit unless a single argument is given
