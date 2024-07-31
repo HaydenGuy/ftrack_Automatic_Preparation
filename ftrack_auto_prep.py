@@ -42,9 +42,12 @@ def main():
         print(f"{directory} does not exist")
         sys.exit(1)
 
-    list_files_recursively(directory)
+    print("Enter the name of the project: ")
+    target_project_name = input("")
 
-    get_target_project("Coding")
+    get_target_project(target_project_name)
+
+    # list_files_recursively(directory)
 
 if __name__ == "__main__":
     main()
