@@ -2,6 +2,7 @@ import sys
 import os
 import ftrack_api
 
+# Prints the names of the files in all folders and subfolders using recursion
 def list_files_recursively(directory_path, indent_level=0):
     with os.scandir(directory_path) as entries:
         for entry in entries:
@@ -19,14 +20,11 @@ def main():
 
     directory = sys.argv[1]
 
-    # Checks if the given variable is a directory and print message based on return
-    if os.path.isdir(directory):
-        print(f"{directory} exists")
-    else:
+    # Checks if the directory exists. Prints message and exits script if not
+    if not os.path.isdir(directory):
         print(f"{directory} does not exist")
         sys.exit(1)
 
-    # Scans a directory and prints the names of its files
     list_files_recursively(directory)
 
     # Information about the session
