@@ -2,6 +2,15 @@ import sys
 import os
 import ftrack_api
 
+def list_files_recursively(directory_path, indent_level=0):
+    with os.scandir(directory_path) as entries:
+        for entry in entries:
+            if entry.is_dir():
+                print(f"Directory: {entry.name}")
+                list_files_recursively(entry.path, indent_level+1)
+            elif entry.is_file():
+                print(entry.name)
+
 def main():
     # Print message and exit unless a single argument is given
     if len(sys.argv) != 2:
@@ -18,10 +27,7 @@ def main():
         sys.exit(1)
 
     # Scans a directory and prints the names of its files
-    with os.scandir(directory) as entries:
-        for entry in entries:
-            if entry.is_file():
-                print(entry.name)
+    list_files_recursively(directory)
 
     # Information about the session
     session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
