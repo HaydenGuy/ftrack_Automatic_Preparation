@@ -97,6 +97,17 @@ def create_sequence(name, parent):
 
     return sequence
 
+# Creates a Shot object
+def create_shot(name, parent):
+    shot = session.create("Shot", {
+        "name": name,
+        "parent": parent
+    })
+
+    session.commit()
+
+    return shot
+
 def main():
     # Print message and exit unless a single argument is given
     if len(sys.argv) != 2:
