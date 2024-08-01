@@ -8,18 +8,20 @@ session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
                              api_key="Mzg5MzI0NzUtMTFlMC00YTEzLWEyZmItNzY4N2Q0YTEwZGZlOjowNmVkNTRiOC1lMGQwLTRiYjMtOTVmYi0zMDZlZDczNjBlMmY")
 
 # Gets names of the directories in argv[1] folder and subfolders using recursion
-def list_files_recursively(directory_path, indent_level=0):
+def list_files_recursively(directory_path, project, indent_level=0):
     with os.scandir(directory_path) as entries:
         for entry in entries:
             if entry.is_dir():
-                list_files_recursively(entry.path, indent_level+1)
-                dir_name = entry.name()
+                dir_name = entry.name
 
                 match dir_name:
                     case "Asset_Builds":
-                        pass
+                        create_asset_build(dir_name, project)
                     case "Sequences":
-                        pass
+                        create_sequence(dir_name, project)
+
+                list_files_recursively(entry.path, indent_level+1)
+                
 
 # Queries a project Name and ID then prints the project name and ID
 def get_target_project(project_name):
@@ -59,6 +61,28 @@ def create_project(project_name):
             session.close()
             sys.exit()
 
+# Creates an Asset Build object 
+def create_asset_build(name, parent):
+    asset_build = session.create("AssetBuild", {
+        "name": name,
+        "parent": parent
+    })
+
+    session.commit()
+
+    return asset_build
+
+# Creates a Sequence object
+def create_sequence(name, parent):
+    sequence = session.create("Sequence", {
+        "name": name,
+        "parent": parent
+    })
+
+    session.commit()
+
+    return sequence
+
 def main():
     # Print message and exit unless a single argument is given
     if len(sys.argv) != 2:
@@ -77,7 +101,7 @@ def main():
 
     project = get_target_project(target_project_name)
 
-    list_files_recursively(directory)
+    list_files_recursively(directory, project)
 
 if __name__ == "__main__":
     main()
