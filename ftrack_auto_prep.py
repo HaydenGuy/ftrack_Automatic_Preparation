@@ -13,9 +13,11 @@ def list_files_recursively(directory_path, project, indent_level=0):
         for entry in entries:
             if entry.is_dir():
                 if entry.name == "Asset_Builds": 
-                    asset_builds = os.listdir(entry.path) # List all the dirs in Asset_Builds
-                    for asset in asset_builds:
-                        create_asset_build(asset, project) # Create all the assets in Asset_Builds
+                    build_types = os.listdir(entry.path) # Lists the dirs within Asset_Builds
+                    for build_type in build_types:
+                        asset_builds = os.listdir(f"{entry.path}/{build_type}") # List the folders within the Asset_Builds subfolders
+                        for asset in asset_builds:
+                            create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
                 elif entry.name == "Sequences":
                     sequences = os.listdir(entry.path)
                     for seq in sequences:
@@ -61,40 +63,24 @@ def create_project(project_name):
             session.close()
             sys.exit()
 
-# Creates an Asset Build object based on user choice
-def create_asset_build(name, parent):
+# Creates an Asset Build object based on the folder the asset is in
+def create_asset_build(name, type, parent):
     # Type ID's for each of the asset build types
-    options = {"1": "66d145f0-13c6-11e3-abf2-f23c91dfaa16",
-               "2": "66d1aedc-13c6-11e3-abf2-f23c91dfaa16",
-               "3": "8c39f908-8b4c-11eb-9cdb-c2ffbce28b68",
-               "4": "66d1daba-13c6-11e3-abf2-f23c91dfaa16",
-               "5": "66d2038c-13c6-11e3-abf2-f23c91dfaa16"}
+    options = {"Character": "66d145f0-13c6-11e3-abf2-f23c91dfaa16",
+               "Prop": "66d1aedc-13c6-11e3-abf2-f23c91dfaa16",
+               "Vehicle": "8c39f908-8b4c-11eb-9cdb-c2ffbce28b68",
+               "Environment": "66d1daba-13c6-11e3-abf2-f23c91dfaa16",
+               "Matte_Painting": "66d2038c-13c6-11e3-abf2-f23c91dfaa16"}
     
-    prompt = """
-    Enter (1-5) to choose an Asset Build type:
-    1. Character
-    2. Prop
-    3. Vehicle
-    4. Environment
-    5. Matte Painting
-    """
+    asset_type = options.get(type) # Gets the type ID for the passed type
 
-    user_choice = input(prompt)
-
-    # Repeat until user chooses 1-5
-    while user_choice not in options:
-        print("Invalid choice. Please enter a number: 1-5")
-        user_choice = input(prompt)
-
-    # Get the value of the dictionary options
-    user_option = options.get(user_choice)
-
-    # Creates the asset build with name of the folder, and chosen type ID. Parent is project. 
     asset_build = session.create("AssetBuild", {
         "name": name,
         "parent": parent,
-        "type_id": user_option
+        "type_id": asset_type
     })
+
+    # TODO Add error checking for duplicate entry
 
     session.commit()
 
