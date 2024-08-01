@@ -61,13 +61,14 @@ def create_project(project_name):
             session.close()
             sys.exit()
 
-# Creates an Asset Build object 
+# Creates an Asset Build object based on user choice
 def create_asset_build(name, parent):
-    options = {"1": "Character",
-               "2": "Prop",
-               "3": "Vehicle",
-               "4": "Environment",
-               "5": "Matte Painting"}
+    # Type ID's for each of the asset build types
+    options = {"1": "66d145f0-13c6-11e3-abf2-f23c91dfaa16",
+               "2": "66d1aedc-13c6-11e3-abf2-f23c91dfaa16",
+               "3": "8c39f908-8b4c-11eb-9cdb-c2ffbce28b68",
+               "4": "66d1daba-13c6-11e3-abf2-f23c91dfaa16",
+               "5": "66d2038c-13c6-11e3-abf2-f23c91dfaa16"}
     
     prompt = """
     Enter (1-5) to choose an Asset Build type:
@@ -80,20 +81,19 @@ def create_asset_build(name, parent):
 
     user_choice = input(prompt)
 
+    # Repeat until user chooses 1-5
     while user_choice not in options:
         print("Invalid choice. Please enter a number: 1-5")
         user_choice = input(prompt)
 
+    # Get the value of the dictionary options
     user_option = options.get(user_choice)
-    print(user_option)
 
-    ## Not working
-    asset_type = session.query(f"AssetType where name is '{user_option}'").one()
-
+    # Creates the asset build with name of the folder, and chosen type ID. Parent is project. 
     asset_build = session.create("AssetBuild", {
         "name": name,
         "parent": parent,
-        "type": asset_type
+        "type_id": user_option
     })
 
     session.commit()
