@@ -12,15 +12,14 @@ def list_files_recursively(directory_path, project, indent_level=0):
     with os.scandir(directory_path) as entries:
         for entry in entries:
             if entry.is_dir():
-                dir_name = entry.name
-
-                match dir_name:
-                    case "Asset_Builds":
-                        create_asset_build(dir_name, project)
-                    case "Sequences":
-                        create_sequence(dir_name, project)
-
-                list_files_recursively(entry.path, indent_level+1)
+                if entry.name == "Asset_Builds": 
+                    asset_builds = os.listdir(entry.path) # List all the dirs in Asset_Builds
+                    for asset in asset_builds:
+                        create_asset_build(asset, project) # Create all the assets in Asset_Builds
+                # elif entry.name == "Sequences":
+                #         # create_sequence(dir_name, project)
+                else:
+                    list_files_recursively(entry.path, indent_level+1)
                 
 
 # Queries a project Name and ID then prints the project name and ID
@@ -45,7 +44,6 @@ def create_project(project_name):
         print("Would you like to create a new project? y/n")
         user_choice = input()
 
-    
     match user_choice:
         case "y":
             project_code = input("Please enter a project code (eg. PROJ-001): ")
