@@ -7,15 +7,19 @@ session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
                              api_user="haydenguyn@hotmail.com",
                              api_key="Mzg5MzI0NzUtMTFlMC00YTEzLWEyZmItNzY4N2Q0YTEwZGZlOjowNmVkNTRiOC1lMGQwLTRiYjMtOTVmYi0zMDZlZDczNjBlMmY")
 
-# Prints the names of the files in all folders and subfolders using recursion
+# Gets names of the directories in argv[1] folder and subfolders using recursion
 def list_files_recursively(directory_path, indent_level=0):
     with os.scandir(directory_path) as entries:
         for entry in entries:
             if entry.is_dir():
-                print(f"Directory: {entry.name}")
                 list_files_recursively(entry.path, indent_level+1)
-            elif entry.is_file():
-                print(entry.name)
+                dir_name = entry.name()
+
+                match dir_name:
+                    case "Asset_Builds":
+                        pass
+                    case "Sequences":
+                        pass
 
 # Queries a project Name and ID then prints the project name and ID
 def get_target_project(project_name):
@@ -26,11 +30,10 @@ def get_target_project(project_name):
     if not project:
         create_project(project_name)
         project = session.query(f"Project where name is {project_name}").first()
-        session.close()
     
-    print(f"Project Name: {project['name']} | ID: {project['id']}")
+    return project
 
-# Creates a new ftrack project if user chooses y, else closes the script
+# Creates a new ftrack project if user chooses 'y'. If 'n' closes the session and exits the script
 def create_project(project_name):
     print(f"Project not found: {project_name}\n")
 
@@ -40,6 +43,7 @@ def create_project(project_name):
         print("Would you like to create a new project? y/n")
         user_choice = input()
 
+    
     match user_choice:
         case "y":
             project_code = input("Please enter a project code (eg. PROJ-001): ")
@@ -71,9 +75,9 @@ def main():
     print("Enter the name of the project: ")
     target_project_name = input("")
 
-    get_target_project(target_project_name)
+    project = get_target_project(target_project_name)
 
-    # list_files_recursively(directory)
+    list_files_recursively(directory)
 
 if __name__ == "__main__":
     main()
