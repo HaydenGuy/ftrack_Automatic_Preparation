@@ -63,9 +63,37 @@ def create_project(project_name):
 
 # Creates an Asset Build object 
 def create_asset_build(name, parent):
+    options = {"1": "Character",
+               "2": "Prop",
+               "3": "Vehicle",
+               "4": "Environment",
+               "5": "Matte Painting"}
+    
+    prompt = """
+    Enter (1-5) to choose an Asset Build type:
+    1. Character
+    2. Prop
+    3. Vehicle
+    4. Environment
+    5. Matte Painting
+    """
+
+    user_choice = input(prompt)
+
+    while user_choice not in options:
+        print("Invalid choice. Please enter a number: 1-5")
+        user_choice = input(prompt)
+
+    user_option = options.get(user_choice)
+    print(user_option)
+
+    ## Not working
+    asset_type = session.query(f"AssetType where name is '{user_option}'").one()
+
     asset_build = session.create("AssetBuild", {
         "name": name,
-        "parent": parent
+        "parent": parent,
+        "type": asset_type
     })
 
     session.commit()
