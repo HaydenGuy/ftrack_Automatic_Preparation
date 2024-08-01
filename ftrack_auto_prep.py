@@ -16,8 +16,10 @@ def list_files_recursively(directory_path, project, indent_level=0):
                     asset_builds = os.listdir(entry.path) # List all the dirs in Asset_Builds
                     for asset in asset_builds:
                         create_asset_build(asset, project) # Create all the assets in Asset_Builds
-                # elif entry.name == "Sequences":
-                #         # create_sequence(dir_name, project)
+                elif entry.name == "Sequences":
+                    sequences = os.listdir(entry.path)
+                    for seq in sequences:
+                        create_sequence(seq, project)
                 else:
                     list_files_recursively(entry.path, indent_level+1)
                 
