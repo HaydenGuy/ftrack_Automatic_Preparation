@@ -19,9 +19,13 @@ def list_files_recursively(directory_path, project, indent_level=0):
                         for asset in asset_builds:
                             create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
                 elif entry.name == "Sequences":
-                    sequences = os.listdir(entry.path)
+                    sequences = os.listdir(entry.path) # Lists the dirs within Sequences
                     for seq in sequences:
-                        create_sequence(seq, project)
+                        create_sequence(seq, project) # Create the sequence objects in ftrack
+                        sequence_obj = session.query(f"Sequence where name is '{seq}'").one() # Query the sequence name and return its object on ftrack
+                        shots = os.listdir(f"{entry.path}/{seq}") # Get list of shot dirs within a sequence dir
+                        for shot in shots:
+                            create_shot(shot, sequence_obj) # Create the shot objets in ftrack
                 else:
                     list_files_recursively(entry.path, indent_level+1)
                 
@@ -93,6 +97,8 @@ def create_sequence(name, parent):
         "parent": parent
     })
 
+    # TODO Add error checking for duplicate entry
+
     session.commit()
 
     return sequence
@@ -103,6 +109,8 @@ def create_shot(name, parent):
         "name": name,
         "parent": parent
     })
+
+    # TODO Add error checking for duplicate entry
 
     session.commit()
 
@@ -129,4 +137,4 @@ def main():
     list_files_recursively(directory, project)
 
 if __name__ == "__main__":
-    main()
+    main()# TODO Add error checking for duplicate entry
