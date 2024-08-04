@@ -41,7 +41,7 @@ def get_target_project(project_name):
     # Find the first instance of project named {target_project_name}
     project = session.query(f"Project where name is {project_name}").first()
 
-    # If project doesn't exist run the create_project function, call query again and close the session
+    # If project doesn't exist run the create_project function and query the project again
     if not project:
         create_project(project_name)
         project = session.query(f"Project where name is {project_name}").first()
@@ -164,4 +164,4 @@ def main():
     list_files_recursively(directory, project)
 
 if __name__ == "__main__":
-    main()# TODO Add error checking for duplicate entry
+    main()
