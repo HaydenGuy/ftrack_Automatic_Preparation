@@ -131,13 +131,50 @@ def create_shot(name, parent):
     return shot
 
 # Create a Task object
-def create_task(name, type, parent):
+def create_task(name, parent, type=None):
     # Type ID's for each of the task types
-    options = {"Animation": "44dc3636-4164-11df-9218-0019bb4983d8",
-               "Rendering": "262225e8-9dcb-11e9-82b8-d27cf242b68b"
+    task_name_id = {
+        "Animation": "44dc3636-4164-11df-9218-0019bb4983d8",
+        "Audio_Mix": "a557384c-a5b5-4aec-b192-2049db0975d1",
+        "Brand_Assets": "bec6a235-717f-4225-8d9f-bde3a7fd2667",
+        "Character": "66d145f0-13c6-11e3-abf2-f23c91dfaa16",
+        "Color": "d410af88-73e9-4a2f-be54-dabb3fd09f50",
+        "Compositing": "44dd23b6-4164-11df-9218-0019bb4983d8",
+        "Concept_Art": "56807358-a0f4-11e9-9843-d27cf242b68b",
+        "Conform": "a3ead45c-ae42-11e9-9454-d27cf242b68b",
+        "Deliverable": "ae1e2480-f24e-11e2-bd1f-f23c91dfaa16",
+        "Editing": "cc46c4c6-13d2-11e3-8915-f23c91dfaa16",
+        "Environment": "66d1daba-13c6-11e3-abf2-f23c91dfaa16",
+        "Furniture": "0e996e82-6662-11ed-a73a-92ba0fc0dc3d",
+        "FX": "44dcea86-4164-11df-9218-0019bb4983d8",
+        "Layout": "ffaebf7a-9dca-11e9-8346-d27cf242b68b",
+        "Lighting": "44dd08fe-4164-11df-9218-0019bb4983d8",
+        "Long_Form": "20b1c08e-dea7-468c-a72d-0817ee2ed6ec",
+        "Lookdev": "44dc8cd0-4164-11df-9218-0019bb4983d8",
+        "Matte_Painting": "66d2038c-13c6-11e3-abf2-f23c91dfaa16",
+        "Modeling": "44dc53c8-4164-11df-9218-0019bb4983d8",
+        "Music": "8233270a-14ac-4802-9e47-2e7a774563c0",
+        "News": "387efc10-d040-4cb4-bfdd-47e8995f0cef",
+        "Previz": "44dc6ffc-4164-11df-9218-0019bb4983d8",
+        "Production": "b628a004-ad7d-11e1-896c-f23c91df1211",
+        "Prop": "66d1aedc-13c6-11e3-abf2-f23c91dfaa16",
+        "Rendering": "262225e8-9dcb-11e9-82b8-d27cf242b68b",
+        "Rigging": "44dd5868-4164-11df-9218-0019bb4983d8",
+        "Rotoscoping": "c3bcfdb4-ad7d-11e1-a444-f23c91df1211",
+        "Short_Form": "d1aa3488-299e-45d1-8469-51fa1b10cebe",
+        "Social": "a566a954-ee06-487f-a1db-3103cfb62ec2",
+        "Sports": "32617c36-dc40-4bd2-8ae0-375194ae8616",
+        "Texture": "a750a84f-b253-11eb-ad41-1e003a0c2434",
+        "Tracking": "44dd3ed2-4164-11df-9218-0019bb4983d8",
+        "Vehicle": "8c39f908-8b4c-11eb-9cdb-c2ffbce28b68",
+        "Video_Shoot": "b7df1bd9-9268-42ea-8be2-6b99abc1730f",
+        "Voice_Over": "2ea3363d-8617-4e45-ad23-ae678ec50b43"
     }
     
-    task_type = options.get(type) # Gets the type ID for the passed type
+    task_type = task_name_id.get(type) # Gets the type ID for the passed type
+
+    if task_type == None: # If type ID is not found (None) this item is skipped and not added to ftrack
+        return
 
     try:
         task = session.create("Task", {
@@ -156,7 +193,7 @@ def create_task(name, type, parent):
     return task
 
 # Search through the Asset_Build subfolders and then create ftrack objects from that
-def ftrack_asset_build(path, project):
+def ftrack_asset_build(path, project): 
     build_types = os.listdir(path)
     for build_type in build_types:
         asset_builds = os.listdir(f"{path}/{build_type}") # List the folders within the Asset_Builds subfolders
@@ -167,7 +204,7 @@ def ftrack_asset_build(path, project):
             tasks = os.listdir(f"{path}/{build_type}/{asset}") # Get list of the dirs within an asset build dir
 
             for task in tasks:
-                create_task(task, task, asset_obj) # Create task objects in ftrack
+                create_task(task, asset_obj, task) # Create task objects in ftrack
 
 # Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
 def ftrack_sequence_build(path, project):
@@ -183,7 +220,7 @@ def ftrack_sequence_build(path, project):
             tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
 
             for task in tasks:
-                create_task(task, task, shot_obj) # Create the task objects in ftrack
+                create_task(task, shot_obj, task) # Create the task objects in ftrack
 
 def main():
     # Print message and exit unless a single argument is given
