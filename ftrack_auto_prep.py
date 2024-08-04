@@ -84,62 +84,78 @@ def create_asset_build(name, type, parent):
     
     asset_type = options.get(type) # Gets the type ID for the passed type
 
-    asset_build = session.create("AssetBuild", {
-        "name": name,
-        "parent": parent,
-        "type_id": asset_type
-    })
+    try:
+        asset_build = session.create("AssetBuild", {
+            "name": name,
+            "parent": parent,
+            "type_id": asset_type
+        })
 
-    # TODO Add error checking for duplicate entry
+        session.commit()
 
-    session.commit()
+    # if DuplicateEntryError a message will be printed and script will end
+    except ftrack_api.exception.ServerError as e:
+        if "DuplicateEntry" in str(e):
+            sys.exit()
 
     return asset_build
 
 # Creates a Sequence object
 def create_sequence(name, parent):
-    sequence = session.create("Sequence", {
-        "name": name,
-        "parent": parent
-    })
+    try:
+        sequence = session.create("Sequence", {
+            "name": name,
+            "parent": parent
+        })
 
-    # TODO Add error checking for duplicate entry
+        session.commit()
 
-    session.commit()
+    # if DuplicateEntryError a message will be printed and script will end
+    except ftrack_api.exception.ServerError as e:
+        if "DuplicateEntry" in str(e):
+            sys.exit()
 
     return sequence
 
 # Creates a Shot object
 def create_shot(name, parent):
-    shot = session.create("Shot", {
-        "name": name,
-        "parent": parent
-    })
+    try:
+        shot = session.create("Shot", {
+            "name": name,
+            "parent": parent
+        })
 
-    # TODO Add error checking for duplicate entry
+        session.commit()
 
-    session.commit()
+    # if DuplicateEntryError a message will be printed and script will end
+    except ftrack_api.exception.ServerError as e:
+        if "DuplicateEntry" in str(e):
+            sys.exit()
 
     return shot
 
 # Create a Task object
 def create_task(name, type, parent):
-     # Type ID's for each of the task types
+    # Type ID's for each of the task types
     options = {"Animation": "44dc3636-4164-11df-9218-0019bb4983d8",
                "Rendering": "262225e8-9dcb-11e9-82b8-d27cf242b68b"
     }
     
     task_type = options.get(type) # Gets the type ID for the passed type
 
-    task = session.create("Task", {
-        "name": name,
-        "parent": parent,
-        "type_id": task_type
-    })
+    try:
+        task = session.create("Task", {
+            "name": name,
+            "parent": parent,
+            "type_id": task_type
+        })
 
-    # TODO Add error checking for duplicate entry
+        session.commit()
 
-    session.commit()
+    # if DuplicateEntryError a message will be printed and script will end
+    except ftrack_api.exception.ServerError as e:
+        if "DuplicateEntry" in str(e):
+            sys.exit()
 
     return task
 
