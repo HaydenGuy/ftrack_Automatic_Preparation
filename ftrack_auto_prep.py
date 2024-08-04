@@ -20,7 +20,7 @@ def ftrack_builder(directory_path, project):
             case "Sequences":
                 ftrack_sequence_build(dir_path, project)
             case _:
-                directories = get_directories(directory_path) # Recursively call the function to get the subfolders
+                ftrack_builder(dir_path, project) # Recursively call the function to get the subfolders
 
 # Get a dictionary of dir names:paths from a given path            
 def get_directories(directory_path):
@@ -169,12 +169,12 @@ def ftrack_sequence_build(path, project):
     sequences = os.listdir(path)
     for seq in sequences:
         create_sequence(seq, project) # Create the sequence objects in ftrack
-        sequence_obj = session.query(f"Sequence where name is '{seq}'").one() # Query the sequence name and return its object on ftrack
+        sequence_obj = session.query(f"Sequence where name is '{seq}'").first() # Query the sequence name and return its object on ftrack
         shots = os.listdir(f"{path}/{seq}") # Get list of shot dirs within a sequence dir
 
         for shot in shots:
             create_shot(shot, sequence_obj) # Create the shot objects in ftrack
-            shot_obj = session.query(f"Shot where name is {shot}").one() # Query the shot name and return its object on ftrack
+            shot_obj = session.query(f"Shot where name is {shot}").first() # Query the shot name and return its object on ftrack
             tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
 
             for task in tasks:
