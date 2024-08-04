@@ -7,20 +7,30 @@ session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
                              api_user="haydenguyn@hotmail.com",
                              api_key="Mzg5MzI0NzUtMTFlMC00YTEzLWEyZmItNzY4N2Q0YTEwZGZlOjowNmVkNTRiOC1lMGQwLTRiYjMtOTVmYi0zMDZlZDczNjBlMmY")
 
-# Gets names of the directories in argv[1] folder and subfolders using recursion
-def list_files_recursively(directory_path, project, indent_level=0):
+# Calls the ftrack builder functions to create ftrack objects based on the dirs passed
+def ftrack_builder(directory_path, project):
+    directories = get_directories(directory_path)
+
+    for dir_name in directories:
+        dir_path = directories[dir_name]
+
+        match dir_name:
+            case "Asset_Builds":
+                ftrack_asset_build(dir_path, project)
+            case "Sequences":
+                ftrack_sequence_build(dir_path, project)
+            case _:
+                directories = get_directories(directory_path) # Recursively call the function to get the subfolders
+
+# Get a dictionary of dir names:paths from a given path            
+def get_directories(directory_path):
+    directories = {}
     with os.scandir(directory_path) as entries:
         for entry in entries:
             if entry.is_dir():
-                entry_name = entry.name
+                directories[entry.name] = entry.path
 
-                match entry_name:
-                    case "Asset_Builds":
-                        ftrack_asset_build(entry.path, project)
-                    case "Sequences":
-                        ftrack_sequence_build(entry.path, project)
-                    case _:
-                        list_files_recursively(entry.path, indent_level+1)
+    return directories
                     
 # Queries a project Name and ID then prints the project name and ID
 def get_target_project(project_name):
@@ -188,7 +198,7 @@ def main():
 
     project = get_target_project(target_project_name)
 
-    list_files_recursively(directory, project)
+    ftrack_builder(directory, project)
 
 if __name__ == "__main__":
     main()
