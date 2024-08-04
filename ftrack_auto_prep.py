@@ -7,35 +7,21 @@ session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
                              api_user="haydenguyn@hotmail.com",
                              api_key="Mzg5MzI0NzUtMTFlMC00YTEzLWEyZmItNzY4N2Q0YTEwZGZlOjowNmVkNTRiOC1lMGQwLTRiYjMtOTVmYi0zMDZlZDczNjBlMmY")
 
-# TODO Fix this function: change name, refactor some stuff into its own functions
-
 # Gets names of the directories in argv[1] folder and subfolders using recursion
 def list_files_recursively(directory_path, project, indent_level=0):
     with os.scandir(directory_path) as entries:
         for entry in entries:
             if entry.is_dir():
-                if entry.name == "Asset_Builds": 
-                    build_types = os.listdir(entry.path) # Lists the dirs within Asset_Builds
-                    for build_type in build_types:
-                        asset_builds = os.listdir(f"{entry.path}/{build_type}") # List the folders within the Asset_Builds subfolders
-                        for asset in asset_builds:
-                            create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
-                elif entry.name == "Sequences":
-                    sequences = os.listdir(entry.path) # Lists the dirs within Sequences
-                    for seq in sequences:
-                        create_sequence(seq, project) # Create the sequence objects in ftrack
-                        sequence_obj = session.query(f"Sequence where name is '{seq}'").one() # Query the sequence name and return its object on ftrack
-                        shots = os.listdir(f"{entry.path}/{seq}") # Get list of shot dirs within a sequence dir
-                        for shot in shots:
-                            create_shot(shot, sequence_obj) # Create the shot objects in ftrack
-                            shot_obj = session.query(f"Shot where name is {shot}").one() # Query the shot name and return its object on ftrack
-                            tasks = os.listdir(f"{entry.path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
-                            for task in tasks:
-                                create_task(task, task, shot_obj) # Create the task objects in ftrack
-                else:
-                    list_files_recursively(entry.path, indent_level+1)
-                
+                entry_name = entry.name
 
+                match entry_name:
+                    case "Asset_Builds":
+                        ftrack_asset_build(entry.path, project)
+                    case "Sequences":
+                        ftrack_sequence_build(entry.path, project)
+                    case _:
+                        list_files_recursively(entry.path, indent_level+1)
+                    
 # Queries a project Name and ID then prints the project name and ID
 def get_target_project(project_name):
     # Find the first instance of project named {target_project_name}
@@ -158,6 +144,31 @@ def create_task(name, type, parent):
             sys.exit()
 
     return task
+
+# Search through the Asset_Build subfolders and then create ftrack objects from that
+def ftrack_asset_build(path, project):
+    build_types = os.listdir(path)
+    for build_type in build_types:
+        asset_builds = os.listdir(f"{path}/{build_type}") # List the folders within the Asset_Builds subfolders
+
+        for asset in asset_builds:
+            create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
+
+# Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
+def ftrack_sequence_build(path, project):
+    sequences = os.listdir(path)
+    for seq in sequences:
+        create_sequence(seq, project) # Create the sequence objects in ftrack
+        sequence_obj = session.query(f"Sequence where name is '{seq}'").one() # Query the sequence name and return its object on ftrack
+        shots = os.listdir(f"{path}/{seq}") # Get list of shot dirs within a sequence dir
+
+        for shot in shots:
+            create_shot(shot, sequence_obj) # Create the shot objects in ftrack
+            shot_obj = session.query(f"Shot where name is {shot}").one() # Query the shot name and return its object on ftrack
+            tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
+
+            for task in tasks:
+                create_task(task, task, shot_obj) # Create the task objects in ftrack
 
 def main():
     # Print message and exit unless a single argument is given
