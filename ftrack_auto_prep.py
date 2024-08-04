@@ -163,6 +163,11 @@ def ftrack_asset_build(path, project):
 
         for asset in asset_builds:
             create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
+            asset_obj = session.query(f"AssetBuild where name is {asset}").first() # Query the asset build name and return its object on ftrack
+            tasks = os.listdir(f"{path}/{build_type}/{asset}") # Get list of the dirs within an asset build dir
+
+            for task in tasks:
+                create_task(task, task, asset_obj) # Create task objects in ftrack
 
 # Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
 def ftrack_sequence_build(path, project):
