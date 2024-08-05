@@ -32,7 +32,7 @@ def get_directories(directory_path):
 
     return directories
                     
-# Queries a project Name and ID then prints the project name and ID
+# Queries a project to see if it exists and runs the create_project if it doesnt
 def get_target_project(project_name):
     # Find the first instance of project named {target_project_name}
     project = session.query(f"Project where name is {project_name}").first()
