@@ -243,7 +243,7 @@ def ftrack_create_asset_and_asset_version(path, task):
 
     session.commit()
 
-    return asset, asset_version
+    return asset_version
 
 # Create an ftrack video component for an asset version
 def ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height):
@@ -288,6 +288,19 @@ def ftrack_create_image_component(asset_version, path, width, height):
     })
     
     session.commit()
+
+# TODO FINISH FUNCTION
+def ftrack_upload_media_file(path, task):
+    base_file = os.path.basename(path)
+    file_name = os.path.splitext(base_file)[0]
+    extension = os.path.splitext(base_file)[1]
+
+    asset_version = ftrack_create_asset_and_asset_version(path, task)
+
+    # if extension == ".mp4" or extension == ".mov" or extension == ".avi":
+        # ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height)
+    # elif extension == ".jpg" or extension == ".png":
+        # ftrack_create_image_component(asset_version, path, width, height)
 
 def main():
     # Print message and exit unless a single argument is given
