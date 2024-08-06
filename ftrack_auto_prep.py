@@ -268,6 +268,27 @@ def ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameR
 
     session.commit()
 
+# Create an ftrack image component for an asset version
+def ftrack_create_image_component(asset_version, path, width, height):
+    location = session.query("Location where name is 'ftrack.server'").one()
+
+    component = asset_version.create_component( # Calls the asset version create_component function
+        path = path, 
+        data = {
+            "name": "ftrackreview-image"
+        },
+        location = location
+    )
+
+    # Define the metadata for the image to use in the web player
+    component["metadata"]["ftr_meta"] = json.dumps({
+        "format": "image",
+        "width": width,
+        "height": height
+    })
+    
+    session.commit()
+
 def main():
     # Print message and exit unless a single argument is given
     if len(sys.argv) != 2:
