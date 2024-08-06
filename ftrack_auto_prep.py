@@ -247,7 +247,7 @@ def ftrack_create_asset_and_asset_version(path, task):
     return asset_version
 
 # Create an ftrack video component for an asset version
-def ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height):
+def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height):
     location = session.query("Location where name is 'ftrack.server'").one() # Sets the location to the ftrack.server
     
     component = asset_version.create_component( # Calls the asset version create_component function
@@ -260,9 +260,9 @@ def ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameR
 
     # Define the metadata for the video to use in the web player
     component["metadata"]["ftr_meta"] = json.dumps({
-        "frameIn": frameIn,
-        "frameOut": frameOut,
-        "frameRate": frameRate,
+        "frameIn": frame_in,
+        "frameOut": frame_out,
+        "frameRate": frame_rate,
         "width": vid_width,
         "height": vid_height
     })
@@ -298,10 +298,11 @@ def ftrack_upload_media_file(path, task):
 
     asset_version = ftrack_create_asset_and_asset_version(path, task)
 
-    # if extension == ".mp4" or extension == ".mov" or extension == ".avi":
-        # ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height)
-    # elif extension == ".jpg" or extension == ".png":
-        # ftrack_create_image_component(asset_version, path, width, height)
+    if extension == ".mp4" or extension == ".mov" or extension == ".avi":
+        
+        ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
+    elif extension == ".jpg" or extension == ".png":
+        ftrack_create_image_component(asset_version, path, width, height)
 
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
