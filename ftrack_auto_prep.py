@@ -2,6 +2,7 @@ import sys
 import os
 import ftrack_api
 import json
+import ffmpeg
 
 # Information about the session
 session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
@@ -301,6 +302,32 @@ def ftrack_upload_media_file(path, task):
         # ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height)
     # elif extension == ".jpg" or extension == ".png":
         # ftrack_create_image_component(asset_version, path, width, height)
+
+# Return video metadata for use in media upload
+def get_video_metadata(file_path):
+    probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
+
+    # Gets the video stream (video data)
+    video_stream = next((stream for stream in probe["streams"] if stream["codec_type"] == "video"), None)
+
+    if not video_stream:
+        return "No video stream found"
+    
+    # Extract width and height
+    width = int(video_stream["width"])
+    height = int(video_stream["height"])
+
+    # Calculate frame rate
+    frame_rate_str = video_stream["r_frame_rate"]
+    numerator, denominator = map(int, frame_rate_str.split("/"))
+    frame_rate = numerator / denominator
+
+    # Get duration and calculate frame out
+    duration = float(probe["format"]["duration"])
+    frame_out = int(frame_rate * duration)
+    frame_in = 0
+
+    return width, height, frame_rate, frame_in, frame_out
 
 def main():
     # Print message and exit unless a single argument is given
