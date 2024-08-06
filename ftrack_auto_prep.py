@@ -1,6 +1,7 @@
 import sys
 import os
 import ftrack_api
+import json
 
 # Information about the session
 session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
@@ -243,6 +244,29 @@ def ftrack_create_asset_and_asset_version(path, task):
     session.commit()
 
     return asset, asset_version
+
+# Create an ftrack video component for an asset version
+def ftrack_create_video_component(asset_version, path, frameIn, frameOut, frameRate, vid_width, vid_height):
+    location = session.query("Location where name is 'ftrack.server'").one() # Sets the location to the ftrack.server
+    
+    component = asset_version.create_component( # Calls the asset version create_component function
+        path = path,
+        data = {
+            "name": "ftrackreview-mp4"
+        },
+        location = location # Can use a custom defined location if wanted 
+    )
+
+    # Define the metadata for the video to use in the web player
+    component["metadata"]["ftr_meta"] = json.dumps({
+        "frameIn": frameIn,
+        "frameOut": frameOut,
+        "frameRate": frameRate,
+        "width": vid_width,
+        "height": vid_height
+    })
+
+    session.commit()
 
 def main():
     # Print message and exit unless a single argument is given
