@@ -223,7 +223,7 @@ def ftrack_sequence_build(path, project):
                 create_task(task, shot_obj, task) # Create the task objects in ftrack
 
 # Create an ftrack asset and asset version object
-def create_asset_and_asset_version(path, task):
+def ftrack_create_asset_and_asset_version(path, task):
     task = session.query(f"Task where name is '{task}'").one()
     asset_parent = task["parent"]
     asset_type = session.query("AssetType where name is 'Upload'").one()
