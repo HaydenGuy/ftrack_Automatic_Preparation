@@ -290,7 +290,6 @@ def ftrack_create_image_component(asset_version, path, width, height):
     
     session.commit()
 
-# TODO FINISH FUNCTION
 def ftrack_upload_media_file(path, task):
     base_file = os.path.basename(path)
     extension = os.path.splitext(base_file)[1]
@@ -300,8 +299,8 @@ def ftrack_upload_media_file(path, task):
     if extension == ".mp4" or extension == ".mov" or extension == ".avi":
         vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
         ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
-    elif extension == ".jpg" or extension == ".png":
-        ftrack_create_image_component(asset_version, path, width, height)
+    # elif extension == ".jpg" or extension == ".png":
+    #     ftrack_create_image_component(asset_version, path, width, height)
 
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
