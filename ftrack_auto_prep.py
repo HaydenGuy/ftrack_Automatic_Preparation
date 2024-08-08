@@ -223,16 +223,25 @@ def ftrack_sequence_build(path, project):
 
             for task in tasks:
                 create_task(task, shot_obj, task) # Create the task objects in ftrack
+                directory = (f"{path}/{seq}/{shot}/{task}")
+                videos = get_file_paths(directory)
+
+# Gets the full file path for the mp4 or pngs in a directory and returns them as as list 
+def get_file_paths(directory):
+    videos = [os.path.join(directory, vid) for vid in os.listdir(directory) if vid.endswith(".mp4")]
+    images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png")]
+    
+    return videos, images
 
 # Create an ftrack asset and asset version object
-def ftrack_create_asset_and_asset_version(path, task):
+def ftrack_create_asset_and_asset_version(name, task):
     task = session.query(f"Task where name is '{task}'").one()
     asset_parent = task["parent"]
     asset_type = session.query("AssetType where name is 'Upload'").one()
 
     # Create an asset with name of the paths file name e.g. my_mov.mp4
     asset = session.create("Asset", {
-        "name": os.path.basename(path),
+        "name": name,
         "type": asset_type,
         "parent": asset_parent
     })
@@ -296,10 +305,10 @@ def ftrack_upload_media_file(path, task):
 
     asset_version = ftrack_create_asset_and_asset_version(path, task)
 
-    if extension == ".mp4" or extension == ".mov" or extension == ".avi":
+    if extension == ".mp4":
         vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
         ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
-    # elif extension == ".jpg" or extension == ".png":
+    # elif extension == ".png":
     #     ftrack_create_image_component(asset_version, path, width, height)
 
 # Return video metadata for use in media upload
