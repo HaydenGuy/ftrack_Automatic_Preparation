@@ -226,12 +226,15 @@ def ftrack_sequence_build(path, project):
                 directory = (f"{path}/{seq}/{shot}/{task}")
                 videos = get_file_paths(directory)
 
+                for vid in videos:
+                    print(f"Video: {vid}")
+
 # Gets the full file path for the mp4 or pngs in a directory and returns them as as list 
 def get_file_paths(directory):
-    videos = [os.path.join(directory, vid) for vid in os.listdir(directory) if vid.endswith(".mp4")]
-    images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png")]
+    videos = [os.path.join(directory, vid) for vid in os.listdir(directory) if vid.endswith(".mp4") and vid]
+    # images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png") and img]
     
-    return videos, images
+    return videos
 
 # Create an ftrack asset and asset version object
 def ftrack_create_asset_and_asset_version(name, task):
