@@ -222,12 +222,13 @@ def ftrack_sequence_build(path, project):
             tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
 
             for task in tasks:
-                create_task(task, shot_obj, task) # Create the task objects in ftrack
-                directory = (f"{path}/{seq}/{shot}/{task}")
-                videos = get_file_paths(directory)
+                ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
 
-                for vid in videos:
-                    print(f"Video: {vid}")
+                task_dir = (f"{path}/{seq}/{shot}/{task}") 
+                video_paths = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir
+
+                for vid in video_paths:
+                    ftrack_upload_media_file(vid, ftrack_task["id"]) # Uploads the media associated with the respective task ID
 
 # Gets the full file path for the mp4 or pngs in a directory and returns them as as list 
 def get_file_paths(directory):
@@ -238,7 +239,7 @@ def get_file_paths(directory):
 
 # Create an ftrack asset and asset version object
 def ftrack_create_asset_and_asset_version(name, task):
-    task = session.query(f"Task where name is '{task}'").one()
+    task = session.query(f"Task where id is '{task}'").one()
     asset_parent = task["parent"]
     asset_type = session.query("AssetType where name is 'Upload'").one()
 
@@ -257,6 +258,32 @@ def ftrack_create_asset_and_asset_version(name, task):
     session.commit()
 
     return asset_version
+
+# Return video metadata for use in media upload
+def get_video_metadata(file_path):
+    probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
+
+    # Gets the video stream (video data)
+    video_stream = next((stream for stream in probe["streams"] if stream["codec_type"] == "video"), None)
+
+    if not video_stream:
+        return "No video stream found"
+    
+    # Extract width and height
+    width = int(video_stream["width"])
+    height = int(video_stream["height"])
+
+    # Calculate frame rate
+    frame_rate_str = video_stream["r_frame_rate"]
+    numerator, denominator = map(int, frame_rate_str.split("/"))
+    frame_rate = numerator / denominator
+
+    # Get duration and calculate frame out
+    duration = float(probe["format"]["duration"])
+    frame_out = int(frame_rate * duration)
+    frame_in = 0
+
+    return width, height, frame_rate, frame_in, frame_out
 
 # Create an ftrack video component for an asset version
 def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height):
@@ -302,43 +329,18 @@ def ftrack_create_image_component(asset_version, path, width, height):
     
     session.commit()
 
+# Uploads the media file to ftrack based on the path and task ID
 def ftrack_upload_media_file(path, task):
-    base_file = os.path.basename(path)
-    extension = os.path.splitext(base_file)[1]
+    base_file = os.path.basename(path) # File name
+    extension = os.path.splitext(base_file)[1] # File extension
 
-    asset_version = ftrack_create_asset_and_asset_version(path, task)
+    asset_version = ftrack_create_asset_and_asset_version(base_file, task)
 
     if extension == ".mp4":
         vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
         ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
     # elif extension == ".png":
     #     ftrack_create_image_component(asset_version, path, width, height)
-
-# Return video metadata for use in media upload
-def get_video_metadata(file_path):
-    probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
-
-    # Gets the video stream (video data)
-    video_stream = next((stream for stream in probe["streams"] if stream["codec_type"] == "video"), None)
-
-    if not video_stream:
-        return "No video stream found"
-    
-    # Extract width and height
-    width = int(video_stream["width"])
-    height = int(video_stream["height"])
-
-    # Calculate frame rate
-    frame_rate_str = video_stream["r_frame_rate"]
-    numerator, denominator = map(int, frame_rate_str.split("/"))
-    frame_rate = numerator / denominator
-
-    # Get duration and calculate frame out
-    duration = float(probe["format"]["duration"])
-    frame_out = int(frame_rate * duration)
-    frame_in = 0
-
-    return width, height, frame_rate, frame_in, frame_out
 
 def main():
     # Print message and exit unless a single argument is given
