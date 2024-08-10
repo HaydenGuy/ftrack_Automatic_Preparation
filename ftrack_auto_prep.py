@@ -315,8 +315,13 @@ def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, fra
 
     session.commit()
 
-def get_image_metadata(file_path):
 
+# Return image metadata for use in media upload
+def get_image_metadata(file_path):
+    with Image.open(file_path) as img:
+        width, height = img.size
+
+    return width, height
 
 # Create an ftrack image component for an asset version
 def ftrack_create_image_component(asset_version, path, width, height):
@@ -350,7 +355,7 @@ def ftrack_upload_media_file(path, task):
         vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
         ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
     elif extension == ".png":
-        width, height = get_img_metadata(path)
+        width, height = get_image_metadata(path)
         ftrack_create_image_component(asset_version, path, width, height)
 
 def main():
