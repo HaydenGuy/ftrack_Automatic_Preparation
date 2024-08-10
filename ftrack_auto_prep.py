@@ -206,7 +206,13 @@ def ftrack_asset_build(path, project):
             tasks = os.listdir(f"{path}/{build_type}/{asset}") # Get list of the dirs within an asset build dir
 
             for task in tasks:
-                create_task(task, asset_obj, task) # Create task objects in ftrack
+                ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
+
+                task_dir = (f"{path}/{build_type}/{asset}/{task}")
+                _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
+
+                for img in image_paths:
+                    ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
 
 # Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
 def ftrack_sequence_build(path, project):
@@ -225,7 +231,7 @@ def ftrack_sequence_build(path, project):
                 ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
 
                 task_dir = (f"{path}/{seq}/{shot}/{task}") 
-                video_paths = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir
+                video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
 
                 for vid in video_paths:
                     ftrack_upload_media_file(vid, ftrack_task["id"]) # Uploads the media associated with the respective task ID
@@ -233,9 +239,9 @@ def ftrack_sequence_build(path, project):
 # Gets the full file path for the mp4 or pngs in a directory and returns them as as list 
 def get_file_paths(directory):
     videos = [os.path.join(directory, vid) for vid in os.listdir(directory) if vid.endswith(".mp4") and vid]
-    # images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png") and img]
+    images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png") and img]
     
-    return videos
+    return videos, images
 
 # Create an ftrack asset and asset version object
 def ftrack_create_asset_and_asset_version(name, task):
@@ -339,8 +345,9 @@ def ftrack_upload_media_file(path, task):
     if extension == ".mp4":
         vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
         ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
-    # elif extension == ".png":
-    #     ftrack_create_image_component(asset_version, path, width, height)
+    elif extension == ".png":
+        width, height = get_img_metadata(path)
+        ftrack_create_image_component(asset_version, path, width, height)
 
 def main():
     # Print message and exit unless a single argument is given
