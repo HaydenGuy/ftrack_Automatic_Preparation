@@ -3,6 +3,7 @@ import os
 import ftrack_api
 import json
 import ffmpeg
+from PIL import Image
 
 # Information about the session
 session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
@@ -313,6 +314,9 @@ def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, fra
     })
 
     session.commit()
+
+def get_image_metadata(file_path):
+
 
 # Create an ftrack image component for an asset version
 def ftrack_create_image_component(asset_version, path, width, height):
