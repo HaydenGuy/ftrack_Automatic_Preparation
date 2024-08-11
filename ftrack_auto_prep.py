@@ -266,8 +266,9 @@ def ftrack_create_asset_and_asset_version(name, task):
 
     return asset_version
 
+# Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
 def set_thumbnail(object_type, object_id, dir):
-    img_path = [f for f in os.listdir(dir) if f is "thumbnail.png"]
+    img_path = f"{dir}/thumbnail.png" 
     
     object = session.query(f"{object_type} where id is '{object_id}'").one()
     object.create_thumbnail(img_path)
@@ -382,6 +383,7 @@ def main():
     target_project_name = input("")
 
     project = get_target_project(target_project_name)
+    set_thumbnail("Project", project["id"], directory)
 
     # ftrack_builder(directory, project)
 
