@@ -266,6 +266,15 @@ def ftrack_create_asset_and_asset_version(name, task):
 
     return asset_version
 
+def set_thumbnail(object_type, object_id, img_path):
+    query = session.query(f"{object_type} where id is '{object_id}'").one()
+
+    if query:
+        query.create_thumbnail(img_path)
+    else:
+        return f"No {object_type} with id {object_id} found"
+    
+
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
     probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
@@ -314,7 +323,6 @@ def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, fra
     })
 
     session.commit()
-
 
 # Return image metadata for use in media upload
 def get_image_metadata(file_path):
@@ -376,7 +384,7 @@ def main():
 
     project = get_target_project(target_project_name)
 
-    ftrack_builder(directory, project)
+    # ftrack_builder(directory, project)
 
 if __name__ == "__main__":
     main()
