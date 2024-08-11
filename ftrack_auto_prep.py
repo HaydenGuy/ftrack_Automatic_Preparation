@@ -266,14 +266,13 @@ def ftrack_create_asset_and_asset_version(name, task):
 
     return asset_version
 
-def set_thumbnail(object_type, object_id, img_path):
-    query = session.query(f"{object_type} where id is '{object_id}'").one()
-
-    if query:
-        query.create_thumbnail(img_path)
-    else:
-        return f"No {object_type} with id {object_id} found"
+def set_thumbnail(object_type, object_id, dir):
+    img_path = [f for f in os.listdir(dir) if f is "thumbnail.png"]
     
+    object = session.query(f"{object_type} where id is '{object_id}'").one()
+    object.create_thumbnail(img_path)
+
+    session.commit()
 
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
