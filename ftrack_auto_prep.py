@@ -4,11 +4,12 @@ import ftrack_api
 import json
 import ffmpeg
 from PIL import Image
+import re
 
 # Information about the session
-session = ftrack_api.Session(server_url="https://hguy.ftrackapp.com",
-                             api_user="haydenguyn@hotmail.com",
-                             api_key="Mzg5MzI0NzUtMTFlMC00YTEzLWEyZmItNzY4N2Q0YTEwZGZlOjowNmVkNTRiOC1lMGQwLTRiYjMtOTVmYi0zMDZlZDczNjBlMmY")
+session = ftrack_api.Session(server_url="https://haydenguy.ftrackapp.com",
+                             api_user="spam.hguy@gmail.com",
+                             api_key="NzlmMzJhNWEtYWRmZS00MmQ3LTlhZTEtZTE4YTM4OWIxYzU5Ojo3YzVmNDllYi03YmMzLTRlMjYtYjY5Zi1mOTYzZDg1NThjYjU")
 
 # Calls the ftrack builder functions to create ftrack objects based on the dirs passed
 def ftrack_builder(directory_path, project):
@@ -230,8 +231,9 @@ def ftrack_sequence_build(path, project):
 
             for task in tasks:
                 ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
-
                 task_dir = (f"{path}/{seq}/{shot}/{task}") 
+
+                set_thumbnail("Task", ftrack_task["id"], task_dir)
                 video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
 
                 for vid in video_paths:
@@ -267,8 +269,9 @@ def ftrack_create_asset_and_asset_version(name, task):
     return asset_version
 
 # Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
-def set_thumbnail(object_type, object_id, dir, file):
-    img_path = f"{dir}/{file}" 
+def set_thumbnail(object_type, object_id, dir):
+    
+    img_path = 0 
     
     object = session.query(f"{object_type} where id is '{object_id}'").one()
     object.create_thumbnail(img_path)
@@ -383,9 +386,9 @@ def main():
     target_project_name = input("")
 
     project = get_target_project(target_project_name)
-    set_thumbnail("Project", project["id"], directory, "thumbnail.png")
+    set_thumbnail("Project", project["id"], directory)
 
-    # ftrack_builder(directory, project)
+    ftrack_builder(directory, project)
 
 if __name__ == "__main__":
     main()
