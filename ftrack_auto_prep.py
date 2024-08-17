@@ -209,8 +209,13 @@ def ftrack_asset_build(path, project):
 
             for task in tasks:
                 ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
-
                 task_dir = (f"{path}/{build_type}/{asset}/{task}")
+
+                try:
+                    set_thumbnail("Task", ftrack_task["id"], task_dir)
+                except TypeError:
+                    pass
+
                 _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
 
                 for img in image_paths:
@@ -233,7 +238,10 @@ def ftrack_sequence_build(path, project):
                 ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
                 task_dir = (f"{path}/{seq}/{shot}/{task}") 
 
-                set_thumbnail("Task", ftrack_task["id"], task_dir)
+                try:
+                    set_thumbnail("Task", ftrack_task["id"], task_dir)
+                except TypeError:
+                    pass
                 video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
 
                 for vid in video_paths:
@@ -270,14 +278,19 @@ def ftrack_create_asset_and_asset_version(name, task):
 
 # Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
 def set_thumbnail(object_type, object_id, dir):
-    
-    img_path = 0 
+    pattern = r".*_thumbnail\.png$" # Regex pattern to get only files that end in _thumbnail.png
+    _, images = get_file_paths(dir) # Gets the file paths in the given dir
+
+    thumbnail = [path for path in images if re.search(pattern, path)] # Finds the _thumbnail.png using regex
     
     object = session.query(f"{object_type} where id is '{object_id}'").one()
-    object.create_thumbnail(img_path)
-
-    session.commit()
-
+    
+    try: # Create the thumbnail if one exists: there should be only one thumbnail per folder
+        object.create_thumbnail(thumbnail[0])
+        session.commit()
+    except IndexError: # If there is no thumbnail list will be empty [] so we return
+        return
+    
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
     probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
