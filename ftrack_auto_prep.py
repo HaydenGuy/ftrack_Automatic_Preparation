@@ -203,23 +203,29 @@ def ftrack_asset_build(path, project):
         asset_builds = os.listdir(f"{path}/{build_type}") # List the folders within the Asset_Builds subfolders
 
         for asset in asset_builds:
-            create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
-            asset_obj = session.query(f"AssetBuild where name is {asset}").first() # Query the asset build name and return its object on ftrack
+            asset_obj = create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
+            asset_dir = (f"{path}/{build_type}/{asset}")
+
             tasks = os.listdir(f"{path}/{build_type}/{asset}") # Get list of the dirs within an asset build dir
 
             for task in tasks:
-                ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
-                task_dir = (f"{path}/{build_type}/{asset}/{task}")
-
-                try:
-                    set_thumbnail("Task", ftrack_task["id"], task_dir)
-                except TypeError:
-                    pass
-
-                _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
-
-                for img in image_paths:
-                    ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
+                _, extension = os.path.splitext(task)
+                if extension == ".png":
+                    set_thumbnail("AssetBuild", asset_obj["id"], asset_dir)
+                else:
+                    ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
+                    task_dir = (f"{path}/{build_type}/{asset}/{task}")
+                    try:
+                        set_thumbnail("Task", ftrack_task["id"], task_dir)
+                    except TypeError:
+                        pass
+                    
+                    try:
+                        _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
+                        for img in image_paths:
+                            ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
+                    except NotADirectoryError:
+                        pass
 
 # Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
 def ftrack_sequence_build(path, project):
@@ -263,7 +269,7 @@ def ftrack_sequence_build(path, project):
 def get_file_paths(directory):
     videos = [os.path.join(directory, vid) for vid in os.listdir(directory) if vid.endswith(".mp4") and vid]
     images = [os.path.join(directory, img) for img in os.listdir(directory) if img.endswith(".png") and img]
-    
+
     return videos, images
 
 # Create an ftrack asset and asset version object
