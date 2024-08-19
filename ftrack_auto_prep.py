@@ -230,22 +230,34 @@ def ftrack_sequence_build(path, project):
         shots = os.listdir(f"{path}/{seq}") # Get list of shot dirs within a sequence dir
 
         for shot in shots:
-            create_shot(shot, sequence_obj) # Create the shot objects in ftrack
-            shot_obj = session.query(f"Shot where name is {shot}").first() # Query the shot name and return its object on ftrack
-            tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
+            _, extension = os.path.splitext(shot)
+            if extension == ".png":
+                pass
+            else:
+                ftrack_shot = create_shot(shot, sequence_obj) # Create the shot objects in ftrack
 
-            for task in tasks:
-                ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
-                task_dir = (f"{path}/{seq}/{shot}/{task}") 
-
+                shot_obj = session.query(f"Shot where name is {shot}").first() # Query the shot name and return its object on ftrack
+                shot_dir = (f"{path}/{seq}/{shot}")
+                
                 try:
-                    set_thumbnail("Task", ftrack_task["id"], task_dir)
+                    set_thumbnail("Shot", ftrack_shot["id"], shot_dir)                
                 except TypeError:
                     pass
-                video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
 
-                for vid in video_paths:
-                    ftrack_upload_media_file(vid, ftrack_task["id"]) # Uploads the media associated with the respective task ID
+                tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
+
+                for task in tasks:
+                    ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
+                    task_dir = (f"{path}/{seq}/{shot}/{task}") 
+
+                    try:
+                        set_thumbnail("Task", ftrack_task["id"], task_dir)
+                    except TypeError:
+                        pass
+                    video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
+
+                    for vid in video_paths:
+                        ftrack_upload_media_file(vid, ftrack_task["id"]) # Uploads the media associated with the respective task ID
 
 # Gets the full file path for the mp4 or pngs in a directory and returns them as as list 
 def get_file_paths(directory):
