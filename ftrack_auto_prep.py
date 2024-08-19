@@ -233,22 +233,16 @@ def ftrack_sequence_build(path, project):
     for seq in sequences:
         create_sequence(seq, project) # Create the sequence objects in ftrack
         sequence_obj = session.query(f"Sequence where name is '{seq}'").first() # Query the sequence name and return its object on ftrack
+        sequence_dir = (f"{path}/{seq}")
         shots = os.listdir(f"{path}/{seq}") # Get list of shot dirs within a sequence dir
 
         for shot in shots:
             _, extension = os.path.splitext(shot)
             if extension == ".png":
-                pass
+                set_thumbnail("Sequence", sequence_obj["id"], sequence_dir)
             else:
-                ftrack_shot = create_shot(shot, sequence_obj) # Create the shot objects in ftrack
-
+                create_shot(shot, sequence_obj) # Create the shot objects in ftrack
                 shot_obj = session.query(f"Shot where name is {shot}").first() # Query the shot name and return its object on ftrack
-                shot_dir = (f"{path}/{seq}/{shot}")
-                
-                try:
-                    set_thumbnail("Shot", ftrack_shot["id"], shot_dir)                
-                except TypeError:
-                    pass
 
                 tasks = os.listdir(f"{path}/{seq}/{shot}") # Get a list of the task dirs within the shot dir
 
