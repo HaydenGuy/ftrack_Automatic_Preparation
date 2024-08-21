@@ -205,27 +205,21 @@ def ftrack_asset_build(path, project):
         for asset in asset_builds:
             asset_obj = create_asset_build(asset, build_type, project) # Creates the asset builds based on the name and type is based on the folder it is in (i.e. Character)
             asset_dir = (f"{path}/{build_type}/{asset}")
-
             tasks = os.listdir(f"{path}/{build_type}/{asset}") # Get list of the dirs within an asset build dir
 
             for task in tasks:
+
                 _, extension = os.path.splitext(task)
                 if extension == ".png":
                     set_thumbnail("AssetBuild", asset_obj["id"], asset_dir)
                 else:
                     ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
                     task_dir = (f"{path}/{build_type}/{asset}/{task}")
-                    try:
-                        set_thumbnail("Task", ftrack_task["id"], task_dir)
-                    except TypeError:
-                        pass
+                    set_thumbnail("Task", ftrack_task["id"], task_dir)
                     
-                    try:
-                        _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
-                        for img in image_paths:
-                            ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
-                    except NotADirectoryError:
-                        pass
+                    _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
+                    for img in image_paths:
+                        ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
 
 # Search through the Sequence subfolders to create ftrack object for Sequences, Shots, and Tasks
 def ftrack_sequence_build(path, project):
@@ -249,13 +243,9 @@ def ftrack_sequence_build(path, project):
                 for task in tasks:
                     ftrack_task = create_task(task, shot_obj, task) # Create the task objects in ftrack and return the task
                     task_dir = (f"{path}/{seq}/{shot}/{task}") 
-
-                    try:
-                        set_thumbnail("Task", ftrack_task["id"], task_dir)
-                    except TypeError:
-                        pass
+                    set_thumbnail("Task", ftrack_task["id"], task_dir)
+                    
                     video_paths, _ = get_file_paths(task_dir) # Gets the full path of the video files in the task_dir. _ is image paths
-
                     for vid in video_paths:
                         ftrack_upload_media_file(vid, ftrack_task["id"]) # Uploads the media associated with the respective task ID
 
@@ -266,43 +256,6 @@ def get_file_paths(directory):
 
     return videos, images
 
-# Create an ftrack asset and asset version object
-def ftrack_create_asset_and_asset_version(name, task):
-    task = session.query(f"Task where id is '{task}'").one()
-    asset_parent = task["parent"]
-    asset_type = session.query("AssetType where name is 'Upload'").one()
-
-    # Create an asset with name of the paths file name e.g. my_mov.mp4
-    asset = session.create("Asset", {
-        "name": name,
-        "type": asset_type,
-        "parent": asset_parent
-    })
-
-    asset_version = session.create("AssetVersion", {
-        "asset": asset,
-        "task": task
-    })
-
-    session.commit()
-
-    return asset_version
-
-# Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
-def set_thumbnail(object_type, object_id, dir):
-    pattern = r".*_thumbnail\.png$" # Regex pattern to get only files that end in _thumbnail.png
-    _, images = get_file_paths(dir) # Gets the file paths in the given dir
-
-    thumbnail = [path for path in images if re.search(pattern, path)] # Finds the _thumbnail.png using regex
-    
-    object = session.query(f"{object_type} where id is '{object_id}'").one()
-    
-    try: # Create the thumbnail if one exists: there should be only one thumbnail per folder
-        object.create_thumbnail(thumbnail[0])
-        session.commit()
-    except IndexError: # If there is no thumbnail list will be empty [] so we return
-        return
-    
 # Return video metadata for use in media upload
 def get_video_metadata(file_path):
     probe = ffmpeg.probe(file_path) # Gets video info with ffmpeg
@@ -329,6 +282,35 @@ def get_video_metadata(file_path):
 
     return width, height, frame_rate, frame_in, frame_out
 
+# Return image metadata for use in media upload
+def get_image_metadata(file_path):
+    with Image.open(file_path) as img:
+        width, height = img.size
+
+    return width, height
+    
+# Create an ftrack asset and asset version object
+def ftrack_create_asset_and_asset_version(name, task):
+    task = session.query(f"Task where id is '{task}'").one()
+    asset_parent = task["parent"]
+    asset_type = session.query("AssetType where name is 'Upload'").one()
+
+    # Create an asset with name of the paths file name e.g. my_mov.mp4
+    asset = session.create("Asset", {
+        "name": name,
+        "type": asset_type,
+        "parent": asset_parent
+    })
+
+    asset_version = session.create("AssetVersion", {
+        "asset": asset,
+        "task": task
+    })
+
+    session.commit()
+
+    return asset_version
+
 # Create an ftrack video component for an asset version
 def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height):
     location = session.query("Location where name is 'ftrack.server'").one() # Sets the location to the ftrack.server
@@ -351,13 +333,6 @@ def ftrack_create_video_component(asset_version, path, frame_rate, frame_in, fra
     })
 
     session.commit()
-
-# Return image metadata for use in media upload
-def get_image_metadata(file_path):
-    with Image.open(file_path) as img:
-        width, height = img.size
-
-    return width, height
 
 # Create an ftrack image component for an asset version
 def ftrack_create_image_component(asset_version, path, width, height):
@@ -382,17 +357,38 @@ def ftrack_create_image_component(asset_version, path, width, height):
 
 # Uploads the media file to ftrack based on the path and task ID
 def ftrack_upload_media_file(path, task):
-    base_file = os.path.basename(path) # File name
-    extension = os.path.splitext(base_file)[1] # File extension
+    try:
+        base_file = os.path.basename(path) # File name
+        extension = os.path.splitext(base_file)[1] # File extension
 
-    asset_version = ftrack_create_asset_and_asset_version(base_file, task)
+        asset_version = ftrack_create_asset_and_asset_version(base_file, task)
 
-    if extension == ".mp4":
-        vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
-        ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
-    elif extension == ".png":
-        width, height = get_image_metadata(path)
-        ftrack_create_image_component(asset_version, path, width, height)
+        if extension == ".mp4":
+            vid_width, vid_height, frame_rate, frame_in, frame_out = get_video_metadata(path)
+            ftrack_create_video_component(asset_version, path, frame_rate, frame_in, frame_out, vid_width, vid_height)
+        elif extension == ".png":
+            width, height = get_image_metadata(path)
+            ftrack_create_image_component(asset_version, path, width, height)
+    except NotADirectoryError:
+        pass
+
+# Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
+def set_thumbnail(object_type, object_id, dir):
+    try:
+        pattern = r".*_thumbnail\.png$" # Regex pattern to get only files that end in _thumbnail.png
+        _, images = get_file_paths(dir) # Gets the file paths in the given dir
+
+        thumbnail = [path for path in images if re.search(pattern, path)] # Finds the _thumbnail.png using regex
+
+        object = session.query(f"{object_type} where id is '{object_id}'").one()
+
+        try: # Create the thumbnail if one exists: there should be only one thumbnail per folder
+            object.create_thumbnail(thumbnail[0])
+            session.commit()
+        except IndexError: # If there is no thumbnail list will be empty [] so we return
+            return
+    except TypeError:
+        pass
 
 def main():
     # Print message and exit unless a single argument is given
