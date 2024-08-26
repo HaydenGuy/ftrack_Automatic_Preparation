@@ -215,8 +215,12 @@ def ftrack_asset_build(path, project):
                 else:
                     ftrack_task = create_task(task, asset_obj, task) # Create task objects in ftrack
                     task_dir = (f"{path}/{build_type}/{asset}/{task}")
-                    set_thumbnail("Task", ftrack_task["id"], task_dir)
                     
+                    try:
+                        set_thumbnail("Task", ftrack_task["id"], task_dir)
+                    except TypeError:
+                        pass
+
                     _, image_paths = get_file_paths(task_dir) # Gets the full path of the img files in the task_dir. _ is videos
                     for img in image_paths:
                         ftrack_upload_media_file(img, ftrack_task["id"]) # Uploads the media associated with the respective task ID
@@ -374,21 +378,18 @@ def ftrack_upload_media_file(path, task):
 
 # Sets the thumbnail by taking the directory/thumbnail file and attaching it to the queried object
 def set_thumbnail(object_type, object_id, dir):
-    try:
-        pattern = r".*_thumbnail\.png$" # Regex pattern to get only files that end in _thumbnail.png
-        _, images = get_file_paths(dir) # Gets the file paths in the given dir
+    pattern = r".*_thumbnail\.png$" # Regex pattern to get only files that end in _thumbnail.png
+    _, images = get_file_paths(dir) # Gets the file paths in the given dir
 
-        thumbnail = [path for path in images if re.search(pattern, path)] # Finds the _thumbnail.png using regex
+    thumbnail = [path for path in images if re.search(pattern, path)] # Finds the _thumbnail.png using regex
 
-        object = session.query(f"{object_type} where id is '{object_id}'").one()
+    object = session.query(f"{object_type} where id is '{object_id}'").one()
 
-        try: # Create the thumbnail if one exists: there should be only one thumbnail per folder
-            object.create_thumbnail(thumbnail[0])
-            session.commit()
-        except IndexError: # If there is no thumbnail list will be empty [] so we return
-            return
-    except TypeError:
-        pass
+    try: # Create the thumbnail if one exists: there should be only one thumbnail per folder
+        object.create_thumbnail(thumbnail[0])
+        session.commit()
+    except IndexError: # If there is no thumbnail list will be empty [] so we return
+        return
 
 def main():
     # Print message and exit unless a single argument is given
@@ -413,3 +414,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
