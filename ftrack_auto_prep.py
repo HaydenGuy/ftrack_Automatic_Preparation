@@ -7,9 +7,9 @@ from PIL import Image
 import re
 
 # Information about the session
-session = ftrack_api.Session(server_url="https://haydenguy.ftrackapp.com",
-                             api_user="spam.hguy@gmail.com",
-                             api_key="NzlmMzJhNWEtYWRmZS00MmQ3LTlhZTEtZTE4YTM4OWIxYzU5Ojo3YzVmNDllYi03YmMzLTRlMjYtYjY5Zi1mOTYzZDg1NThjYjU")
+session = ftrack_api.Session(server_url="YOUR URL",
+                             api_user="YOUR USER",
+                             api_key="API KEY")
 
 # Calls the ftrack builder functions to create ftrack objects based on the dirs passed
 def ftrack_builder(directory_path, project):
